@@ -1,0 +1,62 @@
+# Node.js / Npm / Yarn
+node_modules/
+dist/
+build/
+.env
+.env.*
+!/.env.example
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# IDE / Editor specific
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+
+# Operating System files
+.DS_Store
+Thumbs.db
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Coverage output
+coverage/
+
+# Build output (if you have a frontend build process, e.g., for React)
+/client/build
+/frontend/build
+
+# TypeScript specific (if applicable)
+*.tsbuildinfo
+
+# Optional: Add if you're using specific tools
+# For example, if using PM2
+# .pm2/
+# pm2.log
+
+# Compiled output (if different from dist/ or build/)
+# out/
+
+# Mac specific
+.AppleDouble
+.LSOverride
+
+# Windows specific
+Desktop.ini
+
+# Temporary files
+*.tmp
+*~
+
+# User-specific files (e.g., local configurations not meant for sharing)
+.local
