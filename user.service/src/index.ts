@@ -37,7 +37,7 @@ app.use(express.urlencoded({ extended: true }));
 // Routes
 app.use('/api/v1/user', userRoutes);
 app.get('/', (req, res) => {
-  res.send('Hello World!');
+  res.send('This is the User Service API'); 
 });
 
 // Error handling middleware
@@ -51,5 +51,5 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
   console.log('Server is running on port '+port);
-  connectDB();
+  connectDB();  
 });
