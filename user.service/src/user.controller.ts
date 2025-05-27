@@ -3,6 +3,7 @@ import TryCathch from './TryCatch.js';
 import UserModel from './model.js';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import { AuthenticatedRequest } from './middlewares.js';
 export const registerUser = TryCathch(async (req, res) => {
     const { name, password, email } = req.body;
     // Validate input
@@ -80,5 +81,29 @@ export const loginUser = TryCathch(async (req: Request, res: Response) => {
             role: user.role,
         },
         token,
+    });
+});
+
+export const getUserProfile = TryCathch(async (req: AuthenticatedRequest, res: Response) => {
+    const userId = req.user?._id; // Assuming req.user is set by authentication middleware
+
+    if (!userId) {
+        res.status(401).json({ message: 'Unauthorized' });
+        return;
+    }
+
+    const user = await UserModel.findById(userId).select('-password'); // Exclude password from the response
+    if (!user) {
+        res.status(404).json({ message: 'User not found' });
+        return;
+    }
+
+    res.status(200).json({
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        playlists: user.playlists,
+        likedSongs: user.likedSongs,
     });
 });
