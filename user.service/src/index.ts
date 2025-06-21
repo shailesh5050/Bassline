@@ -50,6 +50,6 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
-  console.log('Server is running on port '+port);
+  console.log('User Service is running on port '+port);
   connectDB();  
 });

@@ -39,7 +39,7 @@ app.use(express.json());
 app.use('/api/v1',adminRoutes);
 initDB().then(() => { 
 app.listen(port, () => {
-    console.log('Server is running on port '+ port);
+    console.log('Admin Service is running on port '+ port);
 });
 
 })
