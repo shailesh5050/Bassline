@@ -3,7 +3,7 @@ function App() {
 
   return (
     <>
-       <h1>BaseLine</h1> 
+       <h1 className="bg-amber-700">BaseLine</h1> 
     </>
   )
 }
