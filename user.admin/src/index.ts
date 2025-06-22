@@ -4,6 +4,7 @@ import { sql } from './config/db.js';
 import adminRoutes from  './routes.js';
 import cloudinary from 'cloudinary';
 import redis , {createClient} from 'redis'
+import cors from 'cors'
 dotenv.config()
 
 // Initialize Redis client
@@ -32,7 +33,7 @@ cloudinary.v2.config({
 })
 const app = express();
 const port = process.env.PORT || 8001;
-
+app.use(cors())
 async function initDB(){
     try {
         await sql `CREATE TABLE IF NOT EXISTS albums

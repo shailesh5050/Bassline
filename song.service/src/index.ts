@@ -2,6 +2,8 @@ import express from 'express'
 import dotenv from 'dotenv'
 import routes from './router.js'
 import redis , {createClient} from 'redis'
+import cors from 'cors'
+
 dotenv.config()
 
 // Initialize Redis client
@@ -24,6 +26,7 @@ redisClient.connect()
 
 
 const app = express()
+app.use(cors())
 const PORT =process.env.PORT;
 app.use('/api/v1',routes)
 app.listen(PORT,()=>{
