@@ -3,6 +3,7 @@ import TryCathch from "./TryCatch.js";
 import getBuffer from "./config/dataUri.js";
 import cloudinary from 'cloudinary';
 import {sql} from "./config/db.js";
+import { redisClient } from "./index.js";
 
 interface AuthenticatedRequest extends Request {
    user ?:{
@@ -67,8 +68,10 @@ export const addAlbum = TryCathch(async (req:AuthenticatedRequest, res) => {
         message: 'Album added successfully',
         data: result[0],
     });
-        
-   
+    // Invalidate albums cache
+    if (redisClient.isReady) {
+        await redisClient.del("albums");
+    }
 });
 
 export const addSong = TryCathch(async (req:AuthenticatedRequest, res) => {
@@ -78,14 +81,14 @@ export const addSong = TryCathch(async (req:AuthenticatedRequest, res) => {
         });
         return;
     }
-
+    console.log(req.body)
     const { title, description, album } = req.body;
     const files = req.files;
     if(!title || !description || !files || !album) {
         res.status(400).json({
             message: 'Missing required fields',
             receivedFields: {
-                title: title || null,
+                title: title,
                 description: description || null,
                 album: album || null,
                 files: files ? true : false,
@@ -146,6 +149,13 @@ export const addSong = TryCathch(async (req:AuthenticatedRequest, res) => {
         message: 'Song added successfully',
         data: result[0],
     });
+    // Invalidate songs and album_songs cache
+    if (redisClient.isReady) {
+        await redisClient.del("songs");
+        if (album) {
+            await redisClient.del(`album_songs_${album}`);
+        }
+    }
 }
 );
 
@@ -190,7 +200,16 @@ export const deleteAlbum = TryCathch(async (req:AuthenticatedRequest, res) => {
             songs: deletedSongs
         }
     });
+    // Invalidate albums, songs, and album_songs cache
+    if (redisClient.isReady) {
+        await redisClient.del("albums");
+        await redisClient.del("songs");
+        if (id) {
+            await redisClient.del(`album_songs_${id}`);
+        }
+    }
 });
+
 export const deleteSong = TryCathch(async (req:AuthenticatedRequest, res) => {
     if(req.user?.role !== "admin") {
         res.status(401).json({
@@ -220,5 +239,15 @@ export const deleteSong = TryCathch(async (req:AuthenticatedRequest, res) => {
         message: 'Song deleted successfully',
         data: deletedSong[0],
     });
+    // Invalidate songs, album_songs, and song cache
+    if (redisClient.isReady) {
+        await redisClient.del("songs");
+        if (deletedSong[0]?.album_id) {
+            await redisClient.del(`album_songs_${deletedSong[0].album_id}`);
+        }
+        if (id) {
+            await redisClient.del(`song_${id}`);
+        }
+    }
 }
 );
