@@ -2,8 +2,11 @@ import { Layout } from "../Components/Layout"
 import { useSongData } from '../context/SongContext';
 import AlbumCard from "../Components/AlbumCard";
 import SongCard from "../Components/SongCard";
+import Loading from "../Components/Loading";
+
 const Home = () => {
-  const {albums,songs} = useSongData();
+  const { albums, songs, loading } = useSongData();
+  if (loading) return <Loading />;
   return (
     <div>
         <Layout>

@@ -49,11 +49,13 @@ const SongContext = createContext<SongContextType | undefined>(undefined);
 const SongProvider: React.FC<SongContextProps> = ({ children }) => {
   const [songs, setSongs] = useState<Song[]>([]);
   const [albums, setAlbums] = useState<Album[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loadingSongs, setLoadingSongs] = useState<boolean>(true);
+  const [loadingAlbums, setLoadingAlbums] = useState<boolean>(true);
+  const loading = loadingSongs || loadingAlbums;
   const [selectedSong, setSelectedSong] = useState<string | null>('1');
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const fetchSongs = useCallback(async () => {
-    setLoading(true);
+    setLoadingSongs(true);
     try {
       const { data } = await axios.get<Song[]>(`${base_url}/songs`);
       setSongs(data);
@@ -64,19 +66,19 @@ const SongProvider: React.FC<SongContextProps> = ({ children }) => {
     } catch (error) {
       console.error(error);
     } finally {
-      setLoading(false);
+      setLoadingSongs(false);
     }
   }, []);
 
   const fetchAlbums = useCallback(async () => {
-    setLoading(true);
+    setLoadingAlbums(true);
     try {
       const { data } = await axios.get<Album[]>(`${base_url}/albums`);
       setAlbums(data);
     } catch (error) {
       console.error(error);
     } finally {
-      setLoading(false);
+      setLoadingAlbums(false);
     }
   }, []);
   const [index, setIndex] = useState<number>(0);
@@ -101,7 +103,6 @@ const SongProvider: React.FC<SongContextProps> = ({ children }) => {
 
   const [song, setSong] = useState<Song | null>(null);
   const fetchSingleSong = useCallback(async () => {
-    setLoading(true);
     try {
       const { data } = await axios.get<Song>(
         `${base_url}/songs/${selectedSong}`
@@ -109,15 +110,13 @@ const SongProvider: React.FC<SongContextProps> = ({ children }) => {
       setSong(data);
     } catch (error) {
       console.error(error);
-    } finally {
-      setLoading(false);
     }
   }, [selectedSong]);
 
   useEffect(() => {
     fetchSongs();
     fetchAlbums();
-  }, []);
+  }, [fetchSongs, fetchAlbums]);
 
   return (
     <SongContext.Provider
