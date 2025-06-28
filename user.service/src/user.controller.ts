@@ -79,6 +79,8 @@ export const loginUser = TryCathch(async (req: Request, res: Response) => {
             name: user.name,
             email: user.email,
             role: user.role,
+            playlist:user.playlists,
+            likedSongs:user.likedSongs
         },
         token,
     });
