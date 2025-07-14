@@ -101,11 +101,14 @@ export const getUserProfile = TryCathch(async (req: AuthenticatedRequest, res: R
     }
 
     res.status(200).json({
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        playlists: user.playlists,
-        likedSongs: user.likedSongs,
+        message: 'User profile retrieved successfully',
+        user: {
+            id: user._id,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+            playlist: user.playlists,
+            likedSongs: user.likedSongs,
+        },
     });
 });

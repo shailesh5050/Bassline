@@ -4,8 +4,14 @@ import Login from './Pages/Login'
 import  { Toaster } from 'react-hot-toast';
 import { useUserContext } from './context/UserContext';
 import Register from './Pages/Register';
+import Loading from './Components/Loading';
+
 function App() {
-  const { isAuth } = useUserContext();
+  const { isAuth, loading } = useUserContext();
+
+  if (loading) {
+    return <Loading />;
+  }
 
   return (
     <>

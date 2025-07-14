@@ -1,4 +1,4 @@
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import axios from "axios";
 import toast from "react-hot-toast";
 export interface User {
@@ -45,7 +45,6 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState<boolean>(true);
   const [isAuth, setIsAuth] = useState<boolean>(false);
   const [btnLoading, setBtnLoading] = useState<boolean>(false);
-
   async function fetchUser() {
     try {
       const response = await axios.get<LoginResponse>(`${baseUrl}/me`, {
@@ -55,13 +54,25 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
         },
       });
       setUser(response.data.user);
+      setIsAuth(true);
     } catch (error) {
       console.error("Failed to fetch user:", error);
       setUser(null);
+      setIsAuth(false);
+      localStorage.removeItem("token"); // Remove invalid token
     } finally {
       setLoading(false);
     }
   }
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      fetchUser();
+    } else {
+      setLoading(false);
+    }
+  }, []);
 
   async function loginUser(
     email: string,
