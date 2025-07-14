@@ -1,6 +1,6 @@
-import { createContext, useContext, useState, ReactNode } from 'react';
-import axios from 'axios';
-import toast from 'react-hot-toast';
+import { createContext, useContext, useState } from "react";
+import axios from "axios";
+import toast from "react-hot-toast";
 export interface User {
   id: string;
   name: string;
@@ -19,19 +19,21 @@ export interface LoginResponse {
 interface UserContextType {
   user: User | null;
   isAuth: boolean;
-  loading : boolean;
-    btnLoading: boolean;
-    loginUser: (
-      email: string,
-      password: string,
-      navigate: (path: string) => void
-    ) => Promise<void>;
-    registerUser: (
-      name: string,
-      email: string,
-      password: string,
-      navigate: (path: string) => void
-    ) => Promise<void>;
+  loading: boolean;
+  btnLoading: boolean;
+  loginUser: (
+    email: string,
+    password: string,
+    navigate: (path: string) => void
+  ) => Promise<void>;
+  registerUser: (
+    name: string,
+    email: string,
+    password: string,
+    navigate: (path: string) => void
+  ) => Promise<void>;
+
+  logoutUser: () => Promise<void>;
 }
 
 const baseUrl = `http://localhost:8000/api/v1/user`;
@@ -48,21 +50,20 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     try {
       const response = await axios.get<LoginResponse>(`${baseUrl}/me`, {
         headers: {
-          'Content-Type': 'application/json',
-          token: localStorage.getItem('token') || '',
+          "Content-Type": "application/json",
+          token: localStorage.getItem("token") || "",
         },
       });
       setUser(response.data.user);
     } catch (error) {
-      console.error('Failed to fetch user:', error);
+      console.error("Failed to fetch user:", error);
       setUser(null);
     } finally {
       setLoading(false);
     }
   }
- 
 
-   async function loginUser(
+  async function loginUser(
     email: string,
     password: string,
     navigate: (path: string) => void
@@ -112,8 +113,25 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     }
   }
 
+  async function logoutUser() {
+    localStorage.clear();
+    setUser(null);
+    setIsAuth(false);
+    toast.success("User Logout Success");
+  }
+
   return (
-    <UserContext.Provider value={{ user, isAuth, loading, btnLoading,  loginUser, registerUser }}>
+    <UserContext.Provider
+      value={{
+        user,
+        isAuth,
+        loading,
+        btnLoading,
+        loginUser,
+        registerUser,
+        logoutUser,
+      }}
+    >
       {children}
     </UserContext.Provider>
   );
@@ -122,7 +140,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
 export const useUserContext = () => {
   const context = useContext(UserContext);
   if (!context) {
-    throw new Error('useUserContext must be used within a UserProvider');
+    throw new Error("useUserContext must be used within a UserProvider");
   }
   return context;
 };

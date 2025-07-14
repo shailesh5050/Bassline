@@ -2,9 +2,10 @@ import { useNavigate } from "react-router-dom";
 import { useUserContext } from "../context/UserContext";
 const NavbarUI = () => {
   const navigate = useNavigate();
-  const { isAuth } = useUserContext();
+  const { isAuth, logoutUser } = useUserContext();
   const logout = () => {
     // Implement logout functionality here
+    logoutUser();
     console.log("User logged out");
     // You might want to clear user data or redirect to a different page
   };
@@ -38,7 +39,7 @@ const NavbarUI = () => {
           </p>
           {isAuth ? (
             <p
-              onClick={() => logout}
+              onClick={logout}
               className="px-4 py-1 cursor-pointer bg-white text-black text-[15px] rounded-full"
             >
               Logout
