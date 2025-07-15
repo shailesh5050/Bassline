@@ -8,8 +8,8 @@ export const registerUser = TryCathch(async (req, res) => {
     const { name, password, email } = req.body;
     // Validate input
     if (!name || !password || !email) {
-         res.status(400).json({ message: 'Name, password, and email are required' });
-         return;
+        res.status(400).json({ message: 'Name, password, and email are required' });
+        return;
     }
     let user = await UserModel.findOne({ email });
     if (user) {
@@ -79,8 +79,8 @@ export const loginUser = TryCathch(async (req: Request, res: Response) => {
             name: user.name,
             email: user.email,
             role: user.role,
-            playlist:user.playlists,
-            likedSongs:user.likedSongs
+            playlist: user.playlists,
+            likedSongs: user.likedSongs
         },
         token,
     });
@@ -112,3 +112,40 @@ export const getUserProfile = TryCathch(async (req: AuthenticatedRequest, res: R
         },
     });
 });
+
+export const addToPlaylist = TryCathch(async (req: AuthenticatedRequest, res: Response) => {
+    const userId = req.user?._id; // Assuming req.user is set by authentication middleware
+    const { id } = req.params;
+
+    if (!userId) {
+        res.status(401).json({ message: 'Unauthorized' });
+        return;
+    }
+
+    if (!id) {
+        res.status(400).json({ message: 'Song ID is required' });
+        return;
+    }
+
+    const user = await UserModel.findById(userId);
+    if (!user) {
+        res.status(404).json({ message: 'User not found' });
+        return;
+    }
+
+    // Add song to user's playlist
+    if (!user.playlists.includes(id)) {
+        user.playlists.push(id);
+        await user.save();
+        res.status(200).json({ message: 'Song added to playlist successfully' });
+
+
+    } else {
+        user.playlists = user.playlists.filter(songId => songId !== id);
+         await user.save();
+        res.status(200).json({ message: 'Song removed from playlist successfully' });
+    }
+
+   
+
+  });

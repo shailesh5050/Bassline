@@ -34,6 +34,7 @@ interface UserContextType {
   ) => Promise<void>;
 
   logoutUser: () => Promise<void>;
+  addToPlaylist: (id: string) => Promise<void>;
 }
 
 const baseUrl = `http://localhost:8000/api/v1/user`;
@@ -130,6 +131,19 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     setIsAuth(false);
     toast.success("User Logout Success");
   }
+  async function addToPlaylist(id: string) {
+    try{
+      const { data } = await axios.post(`${baseUrl}/playlist/${id}`, {}, {
+        headers: {
+          "Content-Type": "application/json",
+          token: localStorage.getItem("token") || "",
+        },
+      });
+      toast.success(data.message);
+    } catch(error: any){
+      toast.error(error.response?.data?.message || "An error occured");
+    }
+  }
 
   return (
     <UserContext.Provider
@@ -141,6 +155,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
         loginUser,
         registerUser,
         logoutUser,
+        addToPlaylist,
       }}
     >
       {children}
