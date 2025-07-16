@@ -12,9 +12,7 @@ export const getAllAlbum = TryCathch(async (req, res) => {
         console.log("Cache hit");
         res.json(JSON.parse(albums));
         return;
-      }
-    }
-    console.log("Cache miss or Redis unavailable");
+      }    }    console.log("Cache miss or Redis unavailable");
     albums = await sql`select * from album`;
     
     // Try to cache if Redis is available
@@ -26,8 +24,7 @@ export const getAllAlbum = TryCathch(async (req, res) => {
       }
     }
     res.json(albums);
-  } catch (error: any) {
-    console.error("Error in getAllAlbum:", error);
+  } catch (error: any) {    console.error("Error in getAllAlbum:", error);
     // Fallback to database only
     albums = await sql`select * from album`;
     res.json(albums);
@@ -78,8 +75,7 @@ export const getAllSongsOfAlbum = TryCathch(async (req, res) => {
         res.json(JSON.parse(cached));
         return;
       }
-    }
-    console.log("Cache miss or Redis unavailable");
+    }    console.log("Cache miss or Redis unavailable");
     let albums = await sql`select * from album where id=${id}`;
     if (albums.length == 0) {
       res.status(404).json({
@@ -87,7 +83,7 @@ export const getAllSongsOfAlbum = TryCathch(async (req, res) => {
       });
       return;
     }
-    let songs = await sql`select * from song where album=${id}`;
+    let songs = await sql`select * from song where album_id=${id}`;
     const response = { songs, album: albums[0] };
     
     // Try to cache if Redis is available
@@ -99,8 +95,7 @@ export const getAllSongsOfAlbum = TryCathch(async (req, res) => {
       }
     }
     res.json(response);
-  } catch (error: any) {
-    console.error("Error in getAllSongsOfAlbum:", error);
+  } catch (error: any) {    console.error("Error in getAllSongsOfAlbum:", error);
     // Fallback to database only
     let albums = await sql`select * from album where id=${id}`;
     if (albums.length == 0) {
@@ -109,7 +104,7 @@ export const getAllSongsOfAlbum = TryCathch(async (req, res) => {
       });
       return;
     }
-    let songs = await sql`select * from song where album=${id}`;
+    let songs = await sql`select * from song where album_id=${id}`;
     const response = { songs, album: albums[0] };
     res.json(response);
   }

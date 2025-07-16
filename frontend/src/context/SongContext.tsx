@@ -43,12 +43,17 @@ interface SongContextType {
   fetchSingleSong: () => Promise<void>;
   nextSong: () => void;
   prevSong: () => void;
+  albumSongs: Song[];
+  albumData: Album | null;
+  fetchAlbumSongs: (albumId: string) => Promise<void>;
 }
 const SongContext = createContext<SongContextType | undefined>(undefined);
 
 const SongProvider: React.FC<SongContextProps> = ({ children }) => {
   const [songs, setSongs] = useState<Song[]>([]);
   const [albums, setAlbums] = useState<Album[]>([]);
+  const [albumSongs, setAlbumSongs] = useState<Song[]>([]);
+  const [albumData, setAlbumData] = useState<Album | null>(null);
   const [loadingSongs, setLoadingSongs] = useState<boolean>(true);
   const [loadingAlbums, setLoadingAlbums] = useState<boolean>(true);
   const loading = loadingSongs || loadingAlbums;
@@ -63,6 +68,20 @@ const SongProvider: React.FC<SongContextProps> = ({ children }) => {
         setSelectedSong(data[0].id.toString());
       }
       setIsPlaying(false);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoadingSongs(false);
+    }
+  }, []);
+
+  const fetchAlbumSongs = useCallback(async (albumId: string) => {
+    setLoadingSongs(true);
+    try {
+      const { data } = await axios.get<{ songs: Song[]; album: Album }>(`${base_url}/albums/${albumId}/songs`);
+      console.log(data);
+      setAlbumSongs(data.songs);
+      setAlbumData(data.album);''
     } catch (error) {
       console.error(error);
     } finally {
@@ -132,6 +151,9 @@ const SongProvider: React.FC<SongContextProps> = ({ children }) => {
         fetchSingleSong,
         nextSong,
         prevSong,
+        fetchAlbumSongs,
+        albumSongs,
+        albumData
       }}
     >
       {children}

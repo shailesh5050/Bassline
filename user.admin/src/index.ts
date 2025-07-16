@@ -41,14 +41,12 @@ async function initDB(){
            title VARCHAR(255) NOT NULL,
            description VARCHAR(255),
            thumbnail VARCHAR(255) NOT NULL,
-           artist VARCHAR(255), year INTEGER)`;
-
-        await sql `CREATE TABLE IF NOT EXISTS song
+           artist VARCHAR(255), year INTEGER)`;        await sql `CREATE TABLE IF NOT EXISTS song
          ( id SERIAL PRIMARY KEY,
            title VARCHAR(255) NOT NULL,
            description VARCHAR(255),
            thumbnail VARCHAR(255),
-           album_id INTEGER REFERENCES album(id) ON DELETE SET NULL,
+           album_id INTEGER REFERENCES albums(id) ON DELETE SET NULL,
            audio VARCHAR(255) NOT NULL,
            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
            artist VARCHAR(255), year INTEGER)`;
