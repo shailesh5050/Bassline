@@ -1,8 +1,10 @@
 import { useNavigate } from "react-router-dom";
 import PlaylistCard from "./PlaylistCard";
+import { useUserContext } from "../context/UserContext";
 
 const SidebarUI = () => {
-    const navigate = useNavigate()
+  const navigate = useNavigate()
+  const { user } = useUserContext()
   return (
     <div className="w-[25%] h-full p-2 flex-col gap-2 text-white hidden lg:flex">
       {/* Top Section */}
@@ -31,8 +33,8 @@ const SidebarUI = () => {
         </div>
 
         {/* Playlist Card Placeholder */}
-        <div onClick={()=>{navigate('/playlist')}}>
-                <PlaylistCard />
+        <div onClick={() => { navigate('/playlist') }}>
+          <PlaylistCard />
         </div>
 
         <div>
@@ -50,9 +52,11 @@ const SidebarUI = () => {
         </div>
 
         {/* Admin Button Placeholder */}
-        <button className="px-4 ml-5 py-1.5 bg-white text-black text-[15px] rounded-full mt-4 cursor-pointer">
-          Admin Dashboard
-        </button>
+        {user?.role === "admin" && (
+          <button onClick={()=>{navigate('/admin')}} className="px-4 ml-5 py-1.5 bg-white text-black text-[15px] rounded-full mt-4 cursor-pointer">
+            Admin Dashboard
+          </button>
+        )}
       </div>
     </div>
   );

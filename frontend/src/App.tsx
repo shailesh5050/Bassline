@@ -6,6 +6,7 @@ import { useUserContext } from './context/UserContext';
 import Register from './Pages/Register';
 import Loading from './Components/Loading';
 import Album from './Pages/Album';
+import Admin from './Pages/Admin';
 
 function App() {
   const { isAuth, loading } = useUserContext();
@@ -23,6 +24,7 @@ function App() {
           <Route path='/login' element={ isAuth ? <Navigate to='/' /> : <Login />} />
           <Route path='/register' element={ <Register />} />
           <Route path='/album/:id' element={ isAuth ? <Album /> : <Navigate to='/login' />} />
+          <Route path='/admin' element={ isAuth ? <Admin /> : <Navigate to='/login' />} />
         </Routes>
        </Router>
     </>

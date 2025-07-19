@@ -7,8 +7,10 @@ import React, {
   type ReactNode,
   useCallback,
 } from "react";
+import toast from "react-hot-toast";
 
 const base_url = "http://localhost:8003/api/v1";
+const base_urlAdmin = "http://localhost:8001/api/v1"
 export interface Song {
   id: number;
   title: string;
@@ -46,6 +48,10 @@ interface SongContextType {
   albumSongs: Song[];
   albumData: Album | null;
   fetchAlbumSongs: (albumId: string) => Promise<void>;
+  fetchSongs: () => Promise<void>;
+  fetchAlbums: () => Promise<void>;
+  addNewAlbum: (album: any) => Promise<boolean>;
+  addSong: (song: any) => Promise<boolean>;
 }
 const SongContext = createContext<SongContextType | undefined>(undefined);
 
@@ -137,6 +143,79 @@ const SongProvider: React.FC<SongContextProps> = ({ children }) => {
     fetchAlbums();
   }, [fetchSongs, fetchAlbums]);
 
+  const addNewAlbum = useCallback(async (album: any): Promise<boolean> => {
+    try {
+      const formData = new FormData();
+      formData.append('title', album.title);
+      formData.append('description', album.description);
+      if (album.thumbnail) {
+        formData.append('file', album.thumbnail);
+      }
+
+      const { data } = await axios.post<Album>(`${base_urlAdmin}/album/new`, formData, {
+        headers: {
+          token: localStorage.getItem("token") || ""
+          // Don't set Content-Type, let axios set it automatically for FormData
+        },
+      });
+      toast.success("Album added successfully");
+      // Refresh albums after successful addition
+      fetchAlbums();
+      return true;
+    } catch (error: any) {
+      console.log(error);
+      const errorMessage = error.response?.data?.message || "Error adding album";
+      toast.error(errorMessage);
+      return false;
+    }
+  }, [fetchAlbums]);
+
+  const addSong = useCallback(async (song: any): Promise<boolean> => {
+    try {
+      const formData = new FormData();
+      formData.append('title', song.title);
+      formData.append('description', song.description);
+      formData.append('album', song.album);
+      
+      // Ensure both files are present before sending
+      if (!song.audio || !song.thumbnail) {
+        toast.error("Both audio file and thumbnail are required");
+        return false;
+      }
+      
+      // Add audio file first (files[0] in backend)
+      formData.append('file', song.audio);
+      
+      // Add thumbnail file second (files[1] in backend)  
+      formData.append('file', song.thumbnail);
+
+      // Debug: Log what we're sending
+      console.log('Sending song data:', {
+        title: song.title,
+        description: song.description,
+        album: song.album,
+        audioFile: song.audio?.name,
+        thumbnailFile: song.thumbnail?.name
+      });
+
+      const { data } = await axios.post<Song>(`${base_urlAdmin}/song/new`, formData, {
+        headers: {
+          token: localStorage.getItem("token") || ""
+          // Don't set Content-Type, let axios set it automatically for FormData
+        },
+      });
+      toast.success("Song added successfully");
+      // Refresh songs after successful addition
+      fetchSongs();
+      return true;
+    } catch (error: any) {
+      console.log(error);
+      const errorMessage = error.response?.data?.message || "Error adding song";
+      toast.error(errorMessage);
+      return false;
+    }
+  }, [fetchSongs]);
+
   return (
     <SongContext.Provider
       value={{
@@ -153,7 +232,11 @@ const SongProvider: React.FC<SongContextProps> = ({ children }) => {
         prevSong,
         fetchAlbumSongs,
         albumSongs,
-        albumData
+        albumData,
+        fetchSongs,
+        fetchAlbums,
+        addNewAlbum,
+        addSong
       }}
     >
       {children}
