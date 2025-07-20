@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 
 const Admin = () => {
     const { user } = useUserContext();
-    const { songs, albums, fetchAlbums, fetchSongs, addNewAlbum, addSong } = useSongData();
+    const { songs, albums, fetchAlbums, fetchSongs, addNewAlbum, addSong, deleteSong, deleteAlbum } = useSongData();
     const navigate = useNavigate();
     // Album form states
     const [albumTitle, setAlbumTitle] = useState<string>("");
@@ -20,6 +20,26 @@ const Admin = () => {
     const [selectedAlbum, setSelectedAlbum] = useState<string>("");
     const [isUploadingAlbum, setIsUploadingAlbum] = useState<boolean>(false);
     const [isUploadingSong, setIsUploadingSong] = useState<boolean>(false);
+    const [deletingAlbumId, setDeletingAlbumId] = useState<number | null>(null);
+    const [deletingSongId, setDeletingSongId] = useState<number | null>(null);
+
+    const handleDeleteAlbum = async (albumId: number) => {
+        setDeletingAlbumId(albumId);
+        try {
+            await deleteAlbum(albumId);
+        } finally {
+            setDeletingAlbumId(null);
+        }
+    };
+
+    const handleDeleteSong = async (songId: number) => {
+        setDeletingSongId(songId);
+        try {
+            await deleteSong(songId);
+        } finally {
+            setDeletingSongId(null);
+        }
+    };
 
     const albumFileChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files && e.target.files[0];
@@ -282,25 +302,76 @@ const Admin = () => {
                             <div className="music-bar"></div>
                         </div>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                        {/* Sample Album Card */}
-                        <div className="album-card glass rounded-2xl p-6 hover:shadow-2xl hover:shadow-green-500/10 transition-all duration-500 group cursor-pointer">
-                            <div className="relative mb-4 overflow-hidden rounded-xl">
-                                <div className="w-full h-48 bg-gradient-to-br from-gray-700 to-gray-800 flex items-center justify-center">
-                                    <span className="text-4xl opacity-50">🎵</span>
-                                </div>
-                                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                                    <button className="play-button w-12 h-12 bg-green-500 rounded-full flex items-center justify-center text-white hover:bg-green-600 transition-colors">
-                                        ▶
-                                    </button>
-                                </div>
+
+                    <div className="glass rounded-2xl overflow-hidden">
+                        {albums && albums.length > 0 ? (
+                            <div className="overflow-x-auto">
+                                <table className="w-full">
+                                    <thead className="bg-gradient-to-r from-green-500/20 to-teal-500/20">
+                                        <tr>
+                                            <th className="px-6 py-4 text-left text-sm font-semibold text-green-400 uppercase tracking-wider">Thumbnail</th>
+                                            <th className="px-6 py-4 text-left text-sm font-semibold text-green-400 uppercase tracking-wider">ID</th>
+                                            <th className="px-6 py-4 text-left text-sm font-semibold text-green-400 uppercase tracking-wider">Title</th>
+                                            <th className="px-6 py-4 text-left text-sm font-semibold text-green-400 uppercase tracking-wider">Description</th>
+                                            <th className="px-6 py-4 text-left text-sm font-semibold text-green-400 uppercase tracking-wider">Artist</th>
+                                            <th className="px-6 py-4 text-center text-sm font-semibold text-green-400 uppercase tracking-wider">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-gray-700/50">
+                                        {albums.map((album, index) => (
+                                            <tr key={album.id} className="hover:bg-green-500/5 transition-colors duration-200">
+                                                <td className="px-6 py-4">
+                                                    <div className="w-16 h-16 rounded-lg overflow-hidden">
+                                                        {album.thumbnail ? (
+                                                            <img
+                                                                src={album.thumbnail}
+                                                                alt={album.title}
+                                                                className="w-full h-full object-cover"
+                                                            />
+                                                        ) : (
+                                                            <div className="w-full h-full bg-gradient-to-br from-gray-700 to-gray-800 flex items-center justify-center">
+                                                                <span className="text-2xl opacity-50">🎵</span>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </td>
+                                                <td className="px-6 py-4 text-sm text-gray-300">#{album.id}</td>
+                                                <td className="px-6 py-4">
+                                                    <div className="text-sm font-medium text-white">{album.title}</div>
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <div className="text-sm text-gray-400 max-w-xs truncate">{album.description}</div>
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <div className="text-sm text-gray-400">{album.artist || 'N/A'}</div>
+                                                </td>
+                                                <td className="px-6 py-4 text-center">
+                                                    <button
+                                                        onClick={() => handleDeleteAlbum(album.id)}
+                                                        disabled={deletingAlbumId === album.id}
+                                                        className="px-4 py-2 bg-red-500/20 hover:bg-red-500 text-red-400 hover:text-white rounded-lg transition-all duration-300 border border-red-500/30 hover:border-red-500 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                                                    >
+                                                        {deletingAlbumId === album.id ? (
+                                                            <span className="flex items-center justify-center gap-2">
+                                                                <div className="w-3 h-3 border-2 border-red-400 border-t-transparent rounded-full animate-spin"></div>
+                                                                Deleting...
+                                                            </span>
+                                                        ) : (
+                                                            'Delete'
+                                                        )}
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
                             </div>
-                            <h4 className="text-lg font-bold mb-2 group-hover:text-green-400 transition-colors">Sample Album</h4>
-                            <p className="text-gray-400 text-sm mb-4 line-clamp-2">This is a sample album description...</p>
-                            <button className="w-full px-4 py-2 bg-red-500/20 hover:bg-red-500 text-red-400 hover:text-white rounded-lg transition-all duration-300 border border-red-500/30 hover:border-red-500">
-                                Delete Album
-                            </button>
-                        </div>
+                        ) : (
+                            <div className="text-center py-12">
+                                <div className="text-6xl mb-4 opacity-50">🎵</div>
+                                <p className="text-gray-400 text-lg">No albums found. Add your first album above!</p>
+                            </div>
+                        )}
                     </div>
                 </div>
 
@@ -318,34 +389,83 @@ const Admin = () => {
                             <div className="music-bar"></div>
                         </div>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {/* Sample Song Card */}
-                        <div className="glass rounded-2xl p-6 hover:shadow-2xl hover:shadow-orange-500/10 transition-all duration-500 group">
-                            <div className="flex flex-col items-center gap-4 mb-4">
-                                <div className="w-32 h-32 bg-gradient-to-br from-gray-700 to-gray-800 rounded-xl flex items-center justify-center group-hover:scale-105 transition-transform duration-300">
-                                    <span className="text-3xl opacity-50">🎤</span>
-                                </div>
-                                <div className="flex gap-2">
-                                    <input
-                                        type="file"
-                                        className="hidden"
-                                        id="thumbnail-upload"
-                                        accept="image/*"
-                                    />
-                                    <label
-                                        htmlFor="thumbnail-upload"
-                                        className="px-4 py-2 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white rounded-lg cursor-pointer transition-all duration-300 hover:scale-105 text-sm"
-                                    >
-                                        Add Thumbnail
-                                    </label>
-                                </div>
+
+                    <div className="glass rounded-2xl overflow-hidden">
+                        {songs && songs.length > 0 ? (
+                            <div className="overflow-x-auto">
+                                <table className="w-full">
+                                    <thead className="bg-gradient-to-r from-orange-500/20 to-red-500/20">
+                                        <tr>
+                                            <th className="px-6 py-4 text-left text-sm font-semibold text-orange-400 uppercase tracking-wider">Thumbnail</th>
+                                            <th className="px-6 py-4 text-left text-sm font-semibold text-orange-400 uppercase tracking-wider">ID</th>
+                                            <th className="px-6 py-4 text-left text-sm font-semibold text-orange-400 uppercase tracking-wider">Title</th>
+                                            <th className="px-6 py-4 text-left text-sm font-semibold text-orange-400 uppercase tracking-wider">Description</th>
+                                            <th className="px-6 py-4 text-left text-sm font-semibold text-orange-400 uppercase tracking-wider">Artist</th>
+                                            <th className="px-6 py-4 text-left text-sm font-semibold text-orange-400 uppercase tracking-wider">Album</th>
+                                            <th className="px-6 py-4 text-center text-sm font-semibold text-orange-400 uppercase tracking-wider">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-gray-700/50">
+                                        {songs.map((song) => {
+                                            const albumTitle = albums?.find(album => album.id === song.album_id)?.title || 'N/A';
+                                            return (
+                                                <tr key={song.id} className="hover:bg-orange-500/5 transition-colors duration-200">
+                                                    <td className="px-6 py-4">
+                                                        <div className="w-16 h-16 rounded-lg overflow-hidden">
+                                                            {song.thumbnail ? (
+                                                                <img
+                                                                    src={song.thumbnail}
+                                                                    alt={song.title}
+                                                                    className="w-full h-full object-cover"
+                                                                />
+                                                            ) : (
+                                                                <div className="w-full h-full bg-gradient-to-br from-gray-700 to-gray-800 flex items-center justify-center">
+                                                                    <span className="text-2xl opacity-50">🎤</span>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-6 py-4 text-sm text-gray-300">#{song.id}</td>
+                                                    <td className="px-6 py-4">
+                                                        <div className="text-sm font-medium text-white">{song.title}</div>
+                                                    </td>
+                                                    <td className="px-6 py-4">
+                                                        <div className="text-sm text-gray-400 max-w-xs truncate">{song.description}</div>
+                                                    </td>
+                                                    <td className="px-6 py-4">
+                                                        <div className="text-sm text-gray-400">{song.artist || 'N/A'}</div>
+                                                    </td>
+                                                    <td className="px-6 py-4">
+                                                        <div className="text-sm text-gray-400">{albumTitle}</div>
+                                                    </td>
+                                                    <td className="px-6 py-4 text-center">
+                                                        <button
+                                                            onClick={() => handleDeleteSong(song.id)}
+                                                            disabled={deletingSongId === song.id}
+                                                            className="px-4 py-2 bg-red-500/20 hover:bg-red-500 text-red-400 hover:text-white rounded-lg transition-all duration-300 border border-red-500/30 hover:border-red-500 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                                                        >
+                                                            {deletingSongId === song.id ? (
+                                                                <span className="flex items-center justify-center gap-2">
+                                                                    <div className="w-3 h-3 border-2 border-red-400 border-t-transparent rounded-full animate-spin"></div>
+                                                                    Deleting...
+                                                                </span>
+                                                            ) : (
+                                                                'Delete'
+                                                            )}
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })}
+                                    </tbody>
+                                </table>
                             </div>
-                            <h4 className="text-lg font-bold mb-2 group-hover:text-orange-400 transition-colors">Sample Song</h4>
-                            <p className="text-gray-400 text-sm mb-4">This is a sample song description...</p>
-                            <button className="w-full px-4 py-2 bg-red-500/20 hover:bg-red-500 text-red-400 hover:text-white rounded-lg transition-all duration-300 border border-red-500/30 hover:border-red-500">
-                                Delete Song
-                            </button>
-                        </div>
+                        ) : (
+                            <div className="text-center py-12">
+                                <div className="text-6xl mb-4 opacity-50">🎤</div>
+                                <p className="text-gray-400 text-lg">No songs found. Add your first song above!</p>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>

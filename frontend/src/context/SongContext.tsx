@@ -52,6 +52,8 @@ interface SongContextType {
   fetchAlbums: () => Promise<void>;
   addNewAlbum: (album: any) => Promise<boolean>;
   addSong: (song: any) => Promise<boolean>;
+  deleteSong: (songId: number) => Promise<boolean>;
+  deleteAlbum: (albumId: number) => Promise<boolean>;
 }
 const SongContext = createContext<SongContextType | undefined>(undefined);
 
@@ -87,7 +89,7 @@ const SongProvider: React.FC<SongContextProps> = ({ children }) => {
       const { data } = await axios.get<{ songs: Song[]; album: Album }>(`${base_url}/albums/${albumId}/songs`);
       console.log(data);
       setAlbumSongs(data.songs);
-      setAlbumData(data.album);''
+      setAlbumData(data.album);
     } catch (error) {
       console.error(error);
     } finally {
@@ -198,7 +200,7 @@ const SongProvider: React.FC<SongContextProps> = ({ children }) => {
         thumbnailFile: song.thumbnail?.name
       });
 
-      const { data } = await axios.post<Song>(`${base_urlAdmin}/song/new`, formData, {
+      await axios.post<Song>(`${base_urlAdmin}/song/new`, formData, {
         headers: {
           token: localStorage.getItem("token") || ""
           // Don't set Content-Type, let axios set it automatically for FormData
@@ -215,6 +217,44 @@ const SongProvider: React.FC<SongContextProps> = ({ children }) => {
       return false;
     }
   }, [fetchSongs]);
+
+  const deleteSong = useCallback(async (songId: number): Promise<boolean> => {
+    try {
+      await axios.delete(`${base_urlAdmin}/song/${songId}`, {
+        headers: {
+          token: localStorage.getItem("token") || ""
+        },
+      });
+      toast.success("Song deleted successfully");
+      // Refresh songs after successful deletion
+      fetchSongs();
+      return true;
+    } catch (error: any) {
+      console.log(error);
+      const errorMessage = error.response?.data?.message || "Error deleting song";
+      toast.error(errorMessage);
+      return false;
+    }
+  }, [fetchSongs]);
+
+  const deleteAlbum = useCallback(async (albumId: number): Promise<boolean> => {
+    try {
+      await axios.delete(`${base_urlAdmin}/album/${albumId}`, {
+        headers: {
+          token: localStorage.getItem("token") || ""
+        },
+      });
+      toast.success("Album deleted successfully");
+      // Refresh albums after successful deletion
+      fetchAlbums();
+      return true;
+    } catch (error: any) {
+      console.log(error);
+      const errorMessage = error.response?.data?.message || "Error deleting album";
+      toast.error(errorMessage);
+      return false;
+    }
+  }, [fetchAlbums]);
 
   return (
     <SongContext.Provider
@@ -236,7 +276,9 @@ const SongProvider: React.FC<SongContextProps> = ({ children }) => {
         fetchSongs,
         fetchAlbums,
         addNewAlbum,
-        addSong
+        addSong,
+        deleteSong,
+        deleteAlbum
       }}
     >
       {children}
