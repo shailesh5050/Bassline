@@ -54,6 +54,14 @@ interface SongContextType {
   addSong: (song: any) => Promise<boolean>;
   deleteSong: (songId: number) => Promise<boolean>;
   deleteAlbum: (albumId: number) => Promise<boolean>;
+  // Audio state management
+  audioRef: React.RefObject<HTMLAudioElement>;
+  currentTime: number;
+  duration: number;
+  volume: number;
+  handlePlayPause: () => void;
+  handleVolumeChange: (volume: number) => void;
+  handleProgressChange: (time: number) => void;
 }
 const SongContext = createContext<SongContextType | undefined>(undefined);
 
@@ -67,6 +75,118 @@ const SongProvider: React.FC<SongContextProps> = ({ children }) => {
   const loading = loadingSongs || loadingAlbums;
   const [selectedSong, setSelectedSong] = useState<string | null>('1');
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
+  const [song, setSong] = useState<Song | null>(null);
+  const [index, setIndex] = useState<number>(0);
+
+  // Audio state management - create a persistent audio element
+  const audioRef = React.useRef<HTMLAudioElement>(new Audio());
+  const [currentTime, setCurrentTime] = useState<number>(0);
+  const [duration, setDuration] = useState<number>(0);
+  const [volume, setVolume] = useState<number>(10);
+
+  // Define nextSong function early to avoid reference errors
+  const nextSong = useCallback(() => {
+    if (index === songs.length - 1) {
+      setIndex(0);
+    } else {
+      setIndex((prevIndex) => prevIndex + 1);
+      setSelectedSong(songs[index + 1]?.id.toString());
+    }
+  }, [index, songs]);
+
+  const prevSong = useCallback(() => {
+    if (index === 0) {
+      setIndex(songs.length - 1);
+    } else {
+      setIndex((prevIndex) => prevIndex - 1);
+      setSelectedSong(songs[index - 1]?.id.toString());
+    }
+  }, [index, songs]);
+
+  // Audio event handlers
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    const handleLoadedMetadata = () => {
+      setDuration(audio.duration || 0);
+    };
+
+    const handleTimeUpdate = () => {
+      setCurrentTime(audio.currentTime || 0);
+    };
+
+    const handleEnded = () => {
+      nextSong();
+    };
+
+    audio.addEventListener("loadedmetadata", handleLoadedMetadata);
+    audio.addEventListener("timeupdate", handleTimeUpdate);
+    audio.addEventListener("ended", handleEnded);
+
+    return () => {
+      audio.removeEventListener("loadedmetadata", handleLoadedMetadata);
+      audio.removeEventListener("timeupdate", handleTimeUpdate);
+      audio.removeEventListener("ended", handleEnded);
+    };
+  }, [nextSong]);
+
+  // Update audio source when song changes
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (audio && song?.audio) {
+      const wasPlaying = isPlaying;
+      // Store current playback position
+      const currentPosition = audio.currentTime;
+
+      // Only change source if it's a different song
+      if (audio.src !== song.audio) {
+        audio.src = song.audio;
+        audio.volume = volume / 10;
+
+        if (wasPlaying) {
+          audio.play().catch(console.error);
+        }
+      } else {
+        // If it's the same song (e.g., after navigation), maintain position
+        audio.currentTime = currentPosition;
+        if (wasPlaying) {
+          audio.play().catch(console.error);
+        }
+      }
+    }
+  }, [song, volume]);
+
+  // Handle play/pause state changes
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    if (isPlaying) {
+      audio.play().catch(console.error);
+    } else {
+      audio.pause();
+    }
+  }, [isPlaying]);
+
+  // Audio control functions
+  const handlePlayPause = useCallback(() => {
+    setIsPlaying(!isPlaying);
+  }, [isPlaying]);
+
+  const handleVolumeChange = useCallback((newVolume: number) => {
+    setVolume(newVolume);
+    if (audioRef.current) {
+      audioRef.current.volume = newVolume / 10;
+    }
+  }, []);
+
+  const handleProgressChange = useCallback((newTime: number) => {
+    setCurrentTime(newTime);
+    if (audioRef.current) {
+      audioRef.current.currentTime = newTime;
+    }
+  }, []);
   const fetchSongs = useCallback(async () => {
     setLoadingSongs(true);
     try {
@@ -108,27 +228,7 @@ const SongProvider: React.FC<SongContextProps> = ({ children }) => {
       setLoadingAlbums(false);
     }
   }, []);
-  const [index, setIndex] = useState<number>(0);
-
-  const nextSong = useCallback(() => {
-    if (index === songs.length - 1) {
-      setIndex(0);
-    } else {
-      setIndex((prevIndex) => prevIndex + 1);
-      setSelectedSong(songs[index + 1].id.toString());
-    }
-  }, [index, songs]);
-
-  const prevSong = useCallback(() => {
-    if (index === 0) {
-      setIndex(songs.length - 1);
-    } else {
-      setIndex((prevIndex) => prevIndex - 1);
-      setSelectedSong(songs[index - 1].id.toString());
-    }
-  }, [index, songs]);
-
-  const [song, setSong] = useState<Song | null>(null);
+  // These functions are now defined above
   const fetchSingleSong = useCallback(async () => {
     try {
       const { data } = await axios.get<Song>(
@@ -154,7 +254,7 @@ const SongProvider: React.FC<SongContextProps> = ({ children }) => {
         formData.append('file', album.thumbnail);
       }
 
-      const { data } = await axios.post<Album>(`${base_urlAdmin}/album/new`, formData, {
+      await axios.post<Album>(`${base_urlAdmin}/album/new`, formData, {
         headers: {
           token: localStorage.getItem("token") || ""
           // Don't set Content-Type, let axios set it automatically for FormData
@@ -178,16 +278,16 @@ const SongProvider: React.FC<SongContextProps> = ({ children }) => {
       formData.append('title', song.title);
       formData.append('description', song.description);
       formData.append('album', song.album);
-      
+
       // Ensure both files are present before sending
       if (!song.audio || !song.thumbnail) {
         toast.error("Both audio file and thumbnail are required");
         return false;
       }
-      
+
       // Add audio file first (files[0] in backend)
       formData.append('file', song.audio);
-      
+
       // Add thumbnail file second (files[1] in backend)  
       formData.append('file', song.thumbnail);
 
@@ -278,7 +378,15 @@ const SongProvider: React.FC<SongContextProps> = ({ children }) => {
         addNewAlbum,
         addSong,
         deleteSong,
-        deleteAlbum
+        deleteAlbum,
+        // Audio state management
+        audioRef,
+        currentTime,
+        duration,
+        volume,
+        handlePlayPause,
+        handleVolumeChange,
+        handleProgressChange
       }}
     >
       {children}

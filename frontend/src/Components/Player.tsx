@@ -1,59 +1,50 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useSongData } from "../context/SongContext";
 import { FaPlay, FaPause, FaVolumeUp, FaHeart, FaRandom, FaRedo } from "react-icons/fa";
 import { GrChapterNext, GrChapterPrevious } from "react-icons/gr";
 
 const Player = () => {
-  const { song, isPlaying, nextSong, prevSong, setIsPlaying, fetchSingleSong } =
-    useSongData();
+  const { 
+    song, 
+    isPlaying, 
+    nextSong, 
+    prevSong, 
+    fetchSingleSong,
+    currentTime,
+    duration,
+    handlePlayPause: contextHandlePlayPause,
+    handleVolumeChange: contextHandleVolumeChange,
+    handleProgressChange: contextHandleProgressChange
+  } = useSongData();
+  
   useEffect(() => {
     fetchSingleSong();
   }, [fetchSingleSong]);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const [volume, setVolume] = useState<number>(10);
   const [progress, setProgress] = useState<number>(0);
-  const [duration, setDuration] = useState<number>(0);
   const [isLiked, setIsLiked] = useState<boolean>(false);
 
+  // Sync local state with context state
   useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio) return;
-    const handelLoadedMetadata = () => {
-      setDuration(audio.duration || 0);
-    };
-    const handleTimeUpdate = () => {
-      setProgress(audio.currentTime || 0);
-    };
-    audio.addEventListener("loadedmetadata", handelLoadedMetadata);
-    audio.addEventListener("timeupdate", handleTimeUpdate);
-  }, [song]);
+    setProgress(currentTime);
+  }, [currentTime]);
 
+  // Use the context's handlePlayPause function
   const handlePlayPause = () => {
-    if (audioRef.current) {
-      if (isPlaying) {
-        audioRef.current.pause();
-      } else {
-        audioRef.current.play();
-      }
-      setIsPlaying(!isPlaying);
-    }
+    contextHandlePlayPause();
   };
 
   const volumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newVolume = parseFloat(e.target.value); 
     setVolume(newVolume);
-    if (audioRef.current) {
-      audioRef.current.volume = newVolume / 10;
-    }
+    contextHandleVolumeChange(newVolume);
   };
 
   const handleProgressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newTime = (parseFloat(e.target.value) / 100) * duration;
     setProgress(newTime);
-    if (audioRef.current) {
-      audioRef.current.currentTime = newTime;
-    }
+    contextHandleProgressChange(newTime);
   };
 
   const formatTime = (time: number) => {
@@ -93,15 +84,7 @@ const Player = () => {
 
           {/* Player Controls */}
           <div className="flex flex-col items-center gap-3 flex-1 max-w-2xl">
-            {song.audio && (
-              <audio
-                ref={audioRef}
-                src={song.audio}
-                autoPlay={isPlaying}
-                onEnded={nextSong}
-                className="hidden"
-              />
-            )}
+            {/* Audio element is now managed by SongContext */}
             
             {/* Control Buttons */}
             <div className="flex justify-center items-center gap-6">
