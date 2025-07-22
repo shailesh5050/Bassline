@@ -145,6 +145,17 @@ body {
   }
 }
 
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
 .animate-fade-in {
   animation: fade-in 0.8s ease-out forwards;
 }
@@ -159,6 +170,10 @@ body {
 
 .animate-fade-in-up {
   animation: fade-in-up 0.6s ease-out forwards;
+}
+
+.animate-scale-in {
+  animation: scale-in 0.3s ease-out forwards;
 }
 
 /* Line clamp utility */
@@ -237,10 +252,126 @@ body {
   animation: pulse-glow 2s infinite;
 }
 
+/* Custom slider styles */
+.slider {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  border-radius: 2px;
+  outline: none;
+}
+
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #10b981;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(16, 185, 129, 0.4);
+  transition: all 0.3s ease;
+}
+
+.slider::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.6);
+}
+
+.slider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #10b981;
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 2px 6px rgba(16, 185, 129, 0.4);
+  transition: all 0.3s ease;
+}
+
+.slider::-moz-range-thumb:hover {
+  transform: scale(1.2);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.6);
+}
+
+/* Enhanced scrollbar for horizontal scrolling */
+.scrollbar-thin {
+  scrollbar-width: thin;
+}
+
+.scrollbar-thumb-purple-600 {
+  scrollbar-color: #9333ea #1f2937;
+}
+
+.scrollbar-thumb-green-600 {
+  scrollbar-color: #059669 #1f2937;
+}
+
+.scrollbar-track-gray-800 {
+  scrollbar-color: #1f2937 #1f2937;
+}
+
+/* Hide horizontal scrollbars */
+.overflow-x-auto::-webkit-scrollbar {
+  display: none;
+}
+
+.overflow-x-auto {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+::-webkit-scrollbar-horizontal {
+  height: 6px;
+}
+
+::-webkit-scrollbar-horizontal:hover {
+  height: 8px;
+}
+
+/* Card hover glow effects */
+.glass:hover {
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 0 20px rgba(168, 85, 247, 0.1);
+}
+
+/* Button press animation */
+.auth-btn:active,
+button:active {
+  transform: scale(0.98);
+}
+
+/* Loading animation for cards */
+@keyframes card-shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.card-loading {
+  background: linear-gradient(90deg, rgba(255,255,255,0.1) 25%, rgba(255,255,255,0.2) 50%, rgba(255,255,255,0.1) 75%);
+  background-size: 200% 100%;
+  animation: card-shimmer 2s infinite;
+}
+
 /* Responsive grid improvements */
 @media (max-width: 768px) {
   .animate-fade-in,
   .animate-slide-up {
     animation-duration: 0.4s;
+  }
+  
+  .glass {
+    backdrop-filter: blur(15px);
+  }
+  
+  .music-bars {
+    height: 16px;
+  }
+  
+  .music-bar {
+    width: 2px;
   }
 }

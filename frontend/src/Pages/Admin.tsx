@@ -2,6 +2,7 @@ import { useUserContext } from "../context/UserContext";
 import { useSongData } from "../context/SongContext";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
+import ConfirmationModal from "../Components/ConfirmationModal";
 
 const Admin = () => {
     const { user } = useUserContext();
@@ -22,6 +23,11 @@ const Admin = () => {
     const [isUploadingSong, setIsUploadingSong] = useState<boolean>(false);
     const [deletingAlbumId, setDeletingAlbumId] = useState<number | null>(null);
     const [deletingSongId, setDeletingSongId] = useState<number | null>(null);
+    
+    // Confirmation modal states
+    const [showDeleteModal, setShowDeleteModal] = useState<boolean>(false);
+    const [deleteType, setDeleteType] = useState<'album' | 'song'>('album');
+    const [itemToDelete, setItemToDelete] = useState<{id: number, title: string} | null>(null);
 
     const handleDeleteAlbum = async (albumId: number) => {
         setDeletingAlbumId(albumId);
@@ -39,6 +45,29 @@ const Admin = () => {
         } finally {
             setDeletingSongId(null);
         }
+    };
+
+    const openDeleteModal = (type: 'album' | 'song', id: number, title: string) => {
+        setDeleteType(type);
+        setItemToDelete({ id, title });
+        setShowDeleteModal(true);
+    };
+
+    const closeDeleteModal = () => {
+        setShowDeleteModal(false);
+        setItemToDelete(null);
+    };
+
+    const confirmDelete = async () => {
+        if (!itemToDelete) return;
+        
+        if (deleteType === 'album') {
+            await handleDeleteAlbum(itemToDelete.id);
+        } else {
+            await handleDeleteSong(itemToDelete.id);
+        }
+        
+        closeDeleteModal();
     };
 
     const albumFileChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -347,7 +376,7 @@ const Admin = () => {
                                                 </td>
                                                 <td className="px-6 py-4 text-center">
                                                     <button
-                                                        onClick={() => handleDeleteAlbum(album.id)}
+                                                        onClick={() => openDeleteModal('album', album.id, album.title)}
                                                         disabled={deletingAlbumId === album.id}
                                                         className="px-4 py-2 bg-red-500/20 hover:bg-red-500 text-red-400 hover:text-white rounded-lg transition-all duration-300 border border-red-500/30 hover:border-red-500 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
                                                     >
@@ -440,7 +469,7 @@ const Admin = () => {
                                                     </td>
                                                     <td className="px-6 py-4 text-center">
                                                         <button
-                                                            onClick={() => handleDeleteSong(song.id)}
+                                                            onClick={() => openDeleteModal('song', song.id, song.title)}
                                                             disabled={deletingSongId === song.id}
                                                             className="px-4 py-2 bg-red-500/20 hover:bg-red-500 text-red-400 hover:text-white rounded-lg transition-all duration-300 border border-red-500/30 hover:border-red-500 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
                                                         >
@@ -469,6 +498,18 @@ const Admin = () => {
                     </div>
                 </div>
             </div>
+
+            {/* Confirmation Modal */}
+            <ConfirmationModal
+                isOpen={showDeleteModal}
+                onClose={closeDeleteModal}
+                onConfirm={confirmDelete}
+                title={`Delete ${deleteType === 'album' ? 'Album' : 'Song'}`}
+                message={`Are you sure you want to delete "${itemToDelete?.title}"? This action cannot be undone.`}
+                confirmText="Delete"
+                cancelText="Cancel"
+                isLoading={deleteType === 'album' ? deletingAlbumId === itemToDelete?.id : deletingSongId === itemToDelete?.id}
+            />
         </div>
     );
 };
